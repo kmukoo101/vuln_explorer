@@ -170,6 +170,57 @@ with st.expander("Guess That Severity"):
         else:
             st.warning("Not quite. Keep learning!")
 
+# --- CVSS SCORE DISTRIBUTION CHART ---
+st.subheader("CVSS Score Distribution")
+score_data = filtered_df[filtered_df["CVSS Score"] != "N/A"].copy()
+score_data["CVSS Score"] = score_data["CVSS Score"].astype(float)
+hist = alt.Chart(score_data).mark_bar().encode(
+    alt.X("CVSS Score:Q", bin=alt.Bin(maxbins=10)),
+    y='count()',
+    tooltip=["count()"]
+).properties(height=200)
+st.altair_chart(hist, use_container_width=True)
+
+# --- SEVERITY BREAKDOWN PIE CHART ---
+st.subheader("Severity Breakdown")
+severity_counts = filtered_df["Severity"].value_counts().reset_index()
+severity_counts.columns = ["Severity", "Count"]
+pie_chart = alt.Chart(severity_counts).mark_arc().encode(
+    theta="Count:Q",
+    color="Severity:N",
+    tooltip=["Severity", "Count"]
+).properties(height=250)
+st.altair_chart(pie_chart, use_container_width=True)
+
+# --- TIMELINE CHART OF PUBLISHED DATES ---
+st.subheader("Published Timeline")
+timeline_data = score_data.copy()
+timeline_data["Published"] = pd.to_datetime(timeline_data["Published"], errors='coerce')
+timeline = alt.Chart(timeline_data.dropna()).mark_bar().encode(
+    x=alt.X("yearmonth(Published):T", title="Month"),
+    y='count()',
+    tooltip=["count()"]
+).properties(height=200)
+st.altair_chart(timeline, use_container_width=True)
+
+# --- COMMON TERMS COUNTER ---
+st.subheader("Common Terms")
+all_words = re.findall(r'\b\w+\b', ' '.join(filtered_df['Description'].dropna()).lower())
+stopwords = set(["the", "and", "for", "this", "that", "with", "from", "into", "when", "using", "will", "has"])
+filtered_words = [word for word in all_words if word not in stopwords]
+common = Counter(filtered_words).most_common(15)
+terms_df = pd.DataFrame(common, columns=["Word", "Count"])
+st.dataframe(terms_df, use_container_width=True)
+
+# --- DOWNLOAD CSV BUTTON ---
+@st.cache_data
+def convert_df(df):
+    """Converts a DataFrame to CSV bytes."""
+    return df.to_csv(index=False).encode('utf-8')
+
+csv = convert_df(filtered_df)
+st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv")
+
 # --- FEATURED CVE ---
 st.subheader("Featured CVE")
 if not filtered_df.empty:
