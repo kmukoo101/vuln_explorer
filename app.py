@@ -9,6 +9,9 @@ from collections import Counter
 # Configure Streamlit page
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
 
+# --- BANNER IMAGE FROM GITHUB ---
+st.image("https://raw.githubusercontent.com/kmukoo101/vuln_explorer/main/vuln_explorer.png", use_column_width=True)
+
 st.title("Vuln Explorer")
 st.caption("Explore real-world vulnerabilities with filters, insights, and clarity.")
 
