@@ -170,15 +170,6 @@ with st.expander("Guess That Severity"):
         else:
             st.warning("Not quite. Keep learning!")
 
-# --- DOWNLOAD CSV BUTTON (Scoped to Unique Key) ---
-@st.cache_data
-def convert_df(df):
-    """Converts a DataFrame to CSV bytes."""
-    return df.to_csv(index=False).encode('utf-8')
-
-csv = convert_df(filtered_df)
-st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv", key="download_csv_filtered")
-
 # --- CVSS SCORE DISTRIBUTION CHART ---
 st.subheader("CVSS Score Distribution")
 score_data = filtered_df[filtered_df["CVSS Score"] != "N/A"].copy()
@@ -226,6 +217,9 @@ st.dataframe(terms_df, use_container_width=True)
 def convert_df(df):
     """Converts a DataFrame to CSV bytes."""
     return df.to_csv(index=False).encode('utf-8')
+
+csv = convert_df(filtered_df)
+st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv", key="download_csv_filtered")
 
 csv = convert_df(filtered_df)
 st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv")
@@ -293,15 +287,6 @@ st.table(terms_df.style.set_properties(**{"text-align": "left"}).set_table_style
 # --- MAIN TABLE DISPLAY ---
 st.subheader("Filtered CVEs")
 st.write(f"Found {len(filtered_df)} vulnerabilities within the selected filters.")
-
-# --- DOWNLOAD CSV BUTTON ---
-@st.cache_data
-def convert_df(df):
-    """Converts a DataFrame to CSV bytes."""
-    return df.to_csv(index=False).encode('utf-8')
-
-csv = convert_df(filtered_df)
-st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv")
 
 # --- DISPLAY FILTERED CVEs TABLE ---
 st.dataframe(filtered_df.sort_values(by="CVSS Score", ascending=False), use_container_width=True)
