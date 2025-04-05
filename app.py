@@ -162,13 +162,22 @@ with st.expander("Guess That Severity"):
     sample = filtered_df.sample(1).iloc[0]
     st.markdown(f"**Description:** {sample['Description']}")
     user_guess = st.radio("Your guess for the severity:", ["Low", "Medium", "High", "Critical"], key="guess")
-    if st.button("Reveal Answer"):
+    if st.button("Reveal Answer", key="reveal_guess"):
         actual = sample['Severity']
         st.markdown(f"**Actual Severity:** {actual}")
         if user_guess == actual:
             st.success("Correct!")
         else:
             st.warning("Not quite. Keep learning!")
+
+# --- DOWNLOAD CSV BUTTON (Scoped to Unique Key) ---
+@st.cache_data
+def convert_df(df):
+    """Converts a DataFrame to CSV bytes."""
+    return df.to_csv(index=False).encode('utf-8')
+
+csv = convert_df(filtered_df)
+st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv", key="download_csv_filtered")
 
 # --- CVSS SCORE DISTRIBUTION CHART ---
 st.subheader("CVSS Score Distribution")
