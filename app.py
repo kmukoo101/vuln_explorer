@@ -221,9 +221,6 @@ def convert_df(df):
 csv = convert_df(filtered_df)
 st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv", key="download_csv_filtered")
 
-csv = convert_df(filtered_df)
-st.download_button("Download CSV", csv, "filtered_cves.csv", "text/csv")
-
 # --- FEATURED CVE ---
 st.subheader("Featured CVE")
 if not filtered_df.empty:
