@@ -5,7 +5,6 @@ import logging
 import altair as alt
 import re
 from collections import Counter
-import matplotlib.pyplot as plt
 
 # Configure Streamlit page
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
