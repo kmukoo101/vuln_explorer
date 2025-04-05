@@ -10,11 +10,23 @@ from collections import Counter
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
 
 # --- BANNER IMAGE FROM GITHUB ---
-st.image(
-    "https://raw.githubusercontent.com/kmukoo101/vuln_explorer/main/vuln_explorer.png",
-    use_column_width=True,
-    output_format="auto",
-    caption=None
+st.markdown(
+    """
+    <style>
+        .banner-img {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .banner-img img {
+            max-height: 120px;
+            width: auto;
+        }
+    </style>
+    <div class="banner-img">
+        <img src="https://raw.githubusercontent.com/kmukoo101/vuln_explorer/main/vuln_explorer.png" alt="Vuln Explorer Logo">
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 st.title("Vuln Explorer")
