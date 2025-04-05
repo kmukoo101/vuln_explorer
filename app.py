@@ -179,7 +179,12 @@ if not filtered_df.empty:
 
 # --- GAMIFIED SEVERITY GUESS ---
 with st.expander("Guess That Severity"):
-    sample = filtered_df.sample(1).iloc[0]
+    if not filtered_df.empty:
+        sample = filtered_df.sample(1).iloc[0]
+        # continue using sample...
+    else:
+        st.warning("No CVEs available in the current filter to display.")
+
     st.markdown(f"**Description:** {sample['Description']}")
     user_guess = st.radio("Your guess for the severity:", ["Low", "Medium", "High", "Critical"], key="guess")
     if st.button("Reveal Answer", key="reveal_guess"):
