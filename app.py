@@ -10,7 +10,12 @@ from collections import Counter
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
 
 # --- BANNER IMAGE FROM GITHUB ---
-st.image("https://raw.githubusercontent.com/kmukoo101/vuln_explorer/main/vuln_explorer.png", use_column_width=True)
+st.image(
+    "https://raw.githubusercontent.com/kmukoo101/vuln_explorer/main/vuln_explorer.png",
+    use_column_width=True,
+    output_format="auto",
+    caption=None
+)
 
 st.title("Vuln Explorer")
 st.caption("Explore real-world vulnerabilities with filters, insights, and clarity.")
