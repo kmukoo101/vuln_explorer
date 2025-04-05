@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import logging
 import altair as alt
+import re
 
 # Configure Streamlit page
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
@@ -28,21 +29,27 @@ def load_data():
             cve_id = item["cve"]["id"]
             description = item["cve"]["descriptions"][0]["value"]
             metrics = item["cve"].get("metrics", {})
+            published = item["cve"].get("published", "N/A")
+            vector = "N/A"
             score = "N/A"
             if "cvssMetricV31" in metrics:
                 score = metrics["cvssMetricV31"][0]["cvssData"].get("baseScore", "N/A")
+                vector = metrics["cvssMetricV31"][0]["cvssData"].get("vectorString", "N/A")
             elif "cvssMetricV2" in metrics:
                 score = metrics["cvssMetricV2"][0]["cvssData"].get("baseScore", "N/A")
+                vector = metrics["cvssMetricV2"][0]["cvssData"].get("vectorString", "N/A")
 
             cves.append({
                 "CVE ID": cve_id,
                 "Description": description,
-                "CVSS Score": score
+                "CVSS Score": score,
+                "Published": published,
+                "CVSS Vector": vector
             })
         return pd.DataFrame(cves)
     except Exception as e:
         logger.error(f"Failed to load data: {e}")
-        return pd.DataFrame(columns=["CVE ID", "Description", "CVSS Score"])
+        return pd.DataFrame(columns=["CVE ID", "Description", "CVSS Score", "Published", "CVSS Vector"])
 
 # --- LOAD DATA INTO MEMORY ---
 df = load_data()
@@ -50,6 +57,7 @@ df = load_data()
 # --- SIDEBAR FILTERS ---
 st.sidebar.title("Filters")
 min_score, max_score = st.sidebar.slider("CVSS Score Range", 0.0, 10.0, (0.0, 10.0), 0.1)
+search_term = st.sidebar.text_input("Search CVEs by keyword")
 
 # --- FILTER FUNCTION ---
 def score_filter(val):
@@ -60,6 +68,9 @@ def score_filter(val):
         return False
 
 filtered_df = df[df["CVSS Score"].apply(score_filter)]
+
+if search_term:
+    filtered_df = filtered_df[filtered_df["Description"].str.contains(search_term, case=False, na=False)]
 
 # --- FORMAT CVSS SCORES FOR DISPLAY ---
 filtered_df["CVSS Score"] = filtered_df["CVSS Score"].apply(
@@ -96,6 +107,18 @@ hist = alt.Chart(chart_data).mark_bar().encode(
 
 st.altair_chart(hist, use_container_width=True)
 
+# --- TIMELINE CHART OF PUBLISHED DATES ---
+st.subheader("Published Timeline")
+timeline_data = chart_data.copy()
+timeline_data["Published"] = pd.to_datetime(timeline_data["Published"], errors='coerce')
+timeline = alt.Chart(timeline_data.dropna()).mark_bar().encode(
+    x=alt.X("yearmonth(Published):T", title="Month"),
+    y='count()',
+    tooltip=["count()"]
+).properties(height=200)
+
+st.altair_chart(timeline, use_container_width=True)
+
 # --- TOP CVEs SECTION ---
 st.subheader("Top Critical CVEs")
 top_cves = chart_data.sort_values(by="CVSS Score", ascending=False).head(5)
@@ -104,7 +127,7 @@ for _, row in top_cves.iterrows():
 
 # --- MAIN TABLE DISPLAY ---
 st.subheader("Filtered CVEs")
-st.write(f"Found {len(filtered_df)} vulnerabilities within the selected score range.")
+st.write(f"Found {len(filtered_df)} vulnerabilities within the selected filters.")
 
 # --- DOWNLOAD CSV BUTTON ---
 @st.cache_data
@@ -122,6 +145,16 @@ st.dataframe(filtered_df.sort_values(by="CVSS Score", ascending=False), use_cont
 with st.expander("Full Descriptions", expanded=False):
     for _, row in filtered_df.iterrows():
         st.markdown(f"**{row['CVE ID']}** — {row['Description']}")
+
+# --- CVSS VECTORS ---
+with st.expander("CVSS Vectors", expanded=False):
+    for _, row in filtered_df.iterrows():
+        st.markdown(f"**{row['CVE ID']}**: {row['CVSS Vector']}")
+
+# --- USER FEEDBACK ---
+st.markdown("---")
+st.subheader("Feedback")
+st.text_area("What would you like to see in the next version?", key="feedback")
 
 # --- FOOTER ---
 st.markdown("""
