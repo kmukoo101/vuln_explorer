@@ -104,6 +104,72 @@ def get_severity(score):
 
 filtered_df["Severity"] = filtered_df["CVSS Score"].apply(get_severity)
 
+# --- CVE COMPARISON TOOL ---
+selected_cves = st.sidebar.multiselect("Compare CVEs", filtered_df["CVE ID"].tolist())
+if selected_cves:
+    st.subheader("CVE Comparison")
+    comparison_df = filtered_df[filtered_df["CVE ID"].isin(selected_cves)].set_index("CVE ID")
+    st.dataframe(comparison_df, use_container_width=True)
+
+# --- TELL ME A STORY MODE ---
+if st.sidebar.button("Show Me Something Interesting"):
+    interesting_cve = filtered_df[
+        filtered_df["Description"].str.contains(
+            "race condition|strange|weird|unusual|timing|sequence", case=False, na=False
+        )
+    ]
+    if not interesting_cve.empty:
+        sample = interesting_cve.sample(1).iloc[0]
+        st.subheader("CVE Story Highlight")
+        st.markdown(f"**{sample['CVE ID']}**")
+        st.markdown(f"*Published:* {sample['Published']} | *Score:* {sample['CVSS Score']} | *Vector:* {sample['CVSS Vector']}")
+        st.markdown(sample['Description'])
+    else:
+        st.info("No unusual CVEs found within current filters.")
+
+# --- TREND SUMMARY DASHBOARD ---
+trend_terms = ["buffer", "overflow", "denial", "remote", "execute", "privilege", "escalation"]
+trend_counts = {term: 0 for term in trend_terms}
+for desc in filtered_df["Description"].dropna():
+    for term in trend_terms:
+        if term in desc.lower():
+            trend_counts[term] += 1
+trend_df = pd.DataFrame.from_dict(trend_counts, orient='index', columns=["Mentions"])
+trend_df.index.name = "Keyword"
+st.subheader("Exploit Trend Summary")
+st.table(trend_df.sort_values(by="Mentions", ascending=False))
+
+# --- SIMPLIFY CVE DESCRIPTION ---
+def simplify_description(text):
+    """Performs basic NLP substitutions to make text easier to understand."""
+    replacements = {
+        "vulnerability": "weak spot",
+        "remote code execution": "can run code remotely",
+        "privilege escalation": "gain more access",
+        "buffer overflow": "exceeds data limits",
+        "denial of service": "system crash risk",
+    }
+    for term, sub in replacements.items():
+        text = re.sub(term, sub, text, flags=re.IGNORECASE)
+    return text
+
+if not filtered_df.empty:
+    st.subheader("Simplified Description")
+    st.write(simplify_description(filtered_df.iloc[0]['Description']))
+
+# --- GAMIFIED SEVERITY GUESS ---
+with st.expander("Guess That Severity"):
+    sample = filtered_df.sample(1).iloc[0]
+    st.markdown(f"**Description:** {sample['Description']}")
+    user_guess = st.radio("Your guess for the severity:", ["Low", "Medium", "High", "Critical"], key="guess")
+    if st.button("Reveal Answer"):
+        actual = sample['Severity']
+        st.markdown(f"**Actual Severity:** {actual}")
+        if user_guess == actual:
+            st.success("Correct!")
+        else:
+            st.warning("Not quite. Keep learning!")
+
 # --- FEATURED CVE ---
 st.subheader("Featured CVE")
 if not filtered_df.empty:
