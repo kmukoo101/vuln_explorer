@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import logging
+import altair as alt
 
 st.set_page_config(page_title="Vuln Explorer", layout="wide")
 
@@ -57,10 +58,42 @@ def score_filter(val):
 
 filtered_df = df[df["CVSS Score"].apply(score_filter)]
 
+# --- FORMAT SCORE ---
+filtered_df["CVSS Score"] = filtered_df["CVSS Score"].apply(
+    lambda x: f"{float(x):.1f}" if x != "N/A" else x
+)
+
+# --- CHART ---
+st.subheader("CVSS Score Distribution")
+chart_data = filtered_df[filtered_df["CVSS Score"] != "N/A"].copy()
+chart_data["CVSS Score"] = chart_data["CVSS Score"].astype(float)
+hist = alt.Chart(chart_data).mark_bar().encode(
+    alt.X("CVSS Score:Q", bin=alt.Bin(maxbins=10)),
+    y='count()',
+    tooltip=["count()"]
+).properties(height=200)
+
+st.altair_chart(hist, use_container_width=True)
+
 # --- MAIN ---
 st.subheader("Filtered CVEs")
 st.write(f"Found {len(filtered_df)} vulnerabilities within the selected score range.")
-st.dataframe(filtered_df, use_container_width=True)
+
+# --- DOWNLOAD BUTTON ---
+@st.cache_data
+def convert_df(df):
+    return df.to_csv(index=False).encode('utf-8')
+
+csv = convert_df(filtered_df)
+st.download_button("⬇Download CSV", csv, "filtered_cves.csv", "text/csv")
+
+# --- DATAFRAME ---
+st.dataframe(filtered_df.sort_values(by="CVSS Score", ascending=False), use_container_width=True)
+
+# --- EXPANDER FOR FULL DESCRIPTIONS ---
+with st.expander("Full Descriptions", expanded=False):
+    for _, row in filtered_df.iterrows():
+        st.markdown(f"**{row['CVE ID']}** — {row['Description']}")
 
 # --- FOOTER ---
 st.markdown("""
