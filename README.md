@@ -19,3 +19,24 @@ An app aimed to help you explore real-world CVEs using data pulled directly from
 ### 1. Install requirements
 ```bash
 pip install -r requirements.txt
+```
+
+### 2. Run the app
+```bash
+streamlit run app.py
+```
+
+---
+
+## Requirements
+
+- Python 3.9+
+- Streamlit
+- Pandas
+- Requests
+
+```txt
+streamlit>=1.30
+pandas>=2.0
+requests>=2.31
+```
