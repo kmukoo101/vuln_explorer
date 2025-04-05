@@ -245,30 +245,6 @@ hist = alt.Chart(chart_data).mark_bar().encode(
 
 st.altair_chart(hist, use_container_width=True)
 
-# --- SEVERITY BREAKDOWN PIE CHART ---
-st.subheader("Severity Breakdown")
-severity_counts = filtered_df["Severity"].value_counts().reset_index()
-severity_counts.columns = ["Severity", "Count"]
-pie_chart = alt.Chart(severity_counts).mark_arc().encode(
-    theta="Count:Q",
-    color="Severity:N",
-    tooltip=["Severity", "Count"]
-).properties(height=250)
-
-st.altair_chart(pie_chart, use_container_width=True)
-
-# --- TIMELINE CHART OF PUBLISHED DATES ---
-st.subheader("Published Timeline")
-timeline_data = chart_data.copy()
-timeline_data["Published"] = pd.to_datetime(timeline_data["Published"], errors='coerce')
-timeline = alt.Chart(timeline_data.dropna()).mark_bar().encode(
-    x=alt.X("yearmonth(Published):T", title="Month"),
-    y='count()',
-    tooltip=["count()"]
-).properties(height=200)
-
-st.altair_chart(timeline, use_container_width=True)
-
 # --- TOP CVEs SECTION ---
 st.subheader("Top Critical CVEs")
 top_cves = chart_data.sort_values(by="CVSS Score", ascending=False).head(5)
