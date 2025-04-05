@@ -159,7 +159,10 @@ for _, row in top_cves.iterrows():
 st.subheader("Common Terms")
 words = ' '.join(filtered_df["Description"].dropna()).lower().split()
 common_words = Counter(words).most_common(20)
-st.write(pd.DataFrame(common_words, columns=["Word", "Count"]))
+terms_df = pd.DataFrame(common_words, columns=["Word", "Count"])
+st.table(terms_df.style.set_properties(**{"text-align": "left"}).set_table_styles(
+    [{"selector": "th", "props": [("text-align", "left")]}]
+))
 
 # --- MAIN TABLE DISPLAY ---
 st.subheader("Filtered CVEs")
