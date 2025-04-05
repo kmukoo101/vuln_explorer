@@ -5,7 +5,6 @@ import logging
 import altair as alt
 import re
 from collections import Counter
-from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
 # Configure Streamlit page
@@ -157,14 +156,11 @@ top_cves = chart_data.sort_values(by="CVSS Score", ascending=False).head(5)
 for _, row in top_cves.iterrows():
     st.markdown(f"- {row['CVE ID']} — {row['Description'][:100]}... (Score: {row['CVSS Score']})")
 
-# --- WORDCLOUD ---
+# --- COMMON TERMS COUNTER ---
 st.subheader("Common Terms")
-words = ' '.join(filtered_df["Description"].dropna()).lower()
-wordcloud = WordCloud(width=800, height=300, background_color='white').generate(words)
-fig, ax = plt.subplots(figsize=(10, 3))
-ax.imshow(wordcloud, interpolation='bilinear')
-ax.axis('off')
-st.pyplot(fig)
+words = ' '.join(filtered_df["Description"].dropna()).lower().split()
+common_words = Counter(words).most_common(20)
+st.write(pd.DataFrame(common_words, columns=["Word", "Count"]))
 
 # --- MAIN TABLE DISPLAY ---
 st.subheader("Filtered CVEs")
